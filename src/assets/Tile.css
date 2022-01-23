@@ -1,0 +1,7 @@
+ .tile{
+   display: flex;
+   flex-direction: row;
+   width: 100%;
+   min-height: 350px;
+   flex-grow: 1;
+ }

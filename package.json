@@ -1,0 +1,59 @@
+{
+  "name": "ping-demo-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^11.2.7",
+    "@testing-library/user-event": "^12.8.3",
+    "chart.js": "^3.6.0",
+    "cytoscape": "^3.20.0",
+    "cytoscape-dagre": "^2.3.2",
+    "d3": "^7.1.1",
+    "framer-motion": "4.1.17",
+    "immer": "^9.0.6",
+    "react": "^17.0.2",
+    "react-chartjs-2": "^3.3.0",
+    "react-custom-scrollbars": "^4.2.1",
+    "react-cytoscapejs": "^1.2.1",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3",
+    "react-window": "^1.8.6",
+    "resize-observer-polyfill": "^1.5.1",
+    "web-vitals": "^1.1.2"
+  },
+  "scripts": {
+    "start": "npx run-script-os",
+    "start:windows": "react-scripts start",
+    "start:linux": "export SET NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+    "build": "npx run-script-os",
+    "build:linux": "export SET NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
+    "build:windows": "react-scripts build",
+    "build:dev": "dotenv -e .env.development react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:8000",
+  "homepage": ".",
+  "devDependencies": {
+    "dotenv": "^10.0.0"
+  }
+}
