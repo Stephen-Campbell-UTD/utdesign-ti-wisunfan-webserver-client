@@ -1,4 +1,4 @@
-.ping_jobs_icon_container{
+.pingJobs_icon_container {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -8,12 +8,12 @@
   cursor: pointer;
 }
 
-.ping_jobs_icon_container.ti.active::after{
+.pingJobs_icon_container.ti.active::after {
   width: 48px;
   height: 48px;
   position: relative;
-  background-color: var(--red_dark);
+  background-color: var(--redDark);
 }
-.ping_jobs_icon_container.gruvbox.active{
+.pingJobs_icon_container.gruvbox.active {
   background-color: var(--bg1);
 }

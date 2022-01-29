@@ -1,20 +1,19 @@
- .slider_container {
+.slider_container {
   width: 80%;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   position: relative;
- }
+}
 
- .slider_input {
-   position: absolute;
-   left: calc(85% + 5px);
-   width: 16%;
-   font-size: 14px;
-   font-weight: 500;
-   color:  white;
-   border: 0px;
-   border-radius: 5px;
- }
-
+.slider_input {
+  position: absolute;
+  left: calc(85% + 5px);
+  width: 20%;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  border: 0px;
+  border-radius: 5px;
+}
