@@ -122,7 +122,6 @@ function MacFilterModeConfig(props: MacFilterModeConfigProps) {
     throw Error('App null and rendering ConfigTextInput');
   }
   const onChange = ({value}: {value: string}) => {
-    console.log(value);
     App.setState(prevState => {
       return produce(prevState, draftState => {
         draftState.ncpProperties['macfiltermode'] = value;

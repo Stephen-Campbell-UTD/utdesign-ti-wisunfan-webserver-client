@@ -12,7 +12,8 @@ import ConfigTab from './components/ConfigTab';
 import {AppContext} from './Contexts';
 import {CytoscapeTopology, IPAddressInfo, Pingburst} from './types';
 import {APIService} from './APIService';
-import ConnectTab from './components/ConnectTab';
+import ConnectBorderRouterMessage from './components/ConnectBorderRouterMessage';
+import InvalidHostMessage from './components/InvalidHostMessage';
 
 export function getIPAddressInfoByIP(ipAddressInfoArray: IPAddressInfo[], ip: string) {
   for (const ipAddressInfo of ipAddressInfoArray) {
@@ -93,6 +94,7 @@ enum TAB_VIEW {
   MONITOR = 'Monitor',
   CONFIG = 'Config',
   CONNECT = 'Connect',
+  INVALID_HOST = 'Invalid Host',
 }
 
 interface AppState {
@@ -115,7 +117,7 @@ export default class App extends React.Component<AppProps, AppState> {
     pingbursts: [],
     connected: false,
     ncpProperties: DEFAULT_NCP_PROPERTY_VALUES,
-    tabView: TAB_VIEW.CONNECT,
+    tabView: TAB_VIEW.INVALID_HOST,
     theme: THEME.TI,
   };
   constructor(props: AppProps) {
@@ -208,12 +210,16 @@ export default class App extends React.Component<AppProps, AppState> {
     });
   };
 
+  receivedNetworkError(e: unknown) {
+    this.setState({connected: false, tabView: TAB_VIEW.INVALID_HOST});
+  }
+
   updatePingbursts = async () => {
     let newPingbursts: Pingburst[];
     try {
       newPingbursts = await APIService.getPingbursts();
     } catch (e) {
-      console.error(e);
+      this.receivedNetworkError(e);
       return;
     }
     const areEqual = compareObjects(newPingbursts, this.state.pingbursts);
@@ -234,7 +240,7 @@ export default class App extends React.Component<AppProps, AppState> {
       newNCPProperties = await APIService.getProps();
       this.cachedNCPProperties = newNCPProperties;
     } catch (e) {
-      console.error(e);
+      this.receivedNetworkError(e);
       return;
     }
     this.setState({ncpProperties: newNCPProperties});
@@ -253,7 +259,7 @@ export default class App extends React.Component<AppProps, AppState> {
         }
       }
     } catch (e) {
-      console.error(e);
+      this.receivedNetworkError(e);
       return;
     }
   };
@@ -262,16 +268,25 @@ export default class App extends React.Component<AppProps, AppState> {
     try {
       let connected = await APIService.getConnected();
       if (!connected && this.state.connected) {
+        //br became disconnected
         this.setState({connected, tabView: TAB_VIEW.CONNECT});
       } else if (connected && !this.state.connected) {
-        if (this.state.tabView === TAB_VIEW.CONNECT) {
+        //br became connected
+        if (
+          this.state.tabView === TAB_VIEW.CONNECT ||
+          this.state.tabView === TAB_VIEW.INVALID_HOST
+        ) {
           this.setState({connected, tabView: TAB_VIEW.CONFIG});
+        } else {
+          this.setState({connected});
         }
         this.updateNCPProperties();
-        this.setState({connected});
+      } else if (!connected && this.state.tabView === TAB_VIEW.INVALID_HOST) {
+        //we can reach the server but we aren't connected
+        this.setState({connected, tabView: TAB_VIEW.CONNECT});
       }
     } catch (e) {
-      console.error(e);
+      this.receivedNetworkError(e);
       return;
     }
   };
@@ -329,7 +344,10 @@ export default class App extends React.Component<AppProps, AppState> {
         currentTab = <ConfigTab ncpProperties={this.state.ncpProperties} />;
         break;
       case TAB_VIEW.CONNECT:
-        currentTab = <ConnectTab />;
+        currentTab = <ConnectBorderRouterMessage />;
+        break;
+      case TAB_VIEW.INVALID_HOST:
+        currentTab = <InvalidHostMessage />;
         break;
       case TAB_VIEW.MONITOR:
       default:
