@@ -34,8 +34,6 @@ export class APIService {
   }
   static async getProps(): Promise<NCPProperties> {
     const data = await APIService.fetchJSON('/getProps');
-    data['Interface:Up'] = data['Interface:Up'] === 'true';
-    data['Stack:Up'] = data['Stack:Up'] === 'true';
     return data;
   }
   static async setProp(

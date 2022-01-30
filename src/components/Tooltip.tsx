@@ -64,7 +64,7 @@ export default function Tooltip(props: TooltipProps) {
   return (
     <div
       className="tooltip-container"
-      style={{width: '100%', display: 'relative', ...props.style}}
+      style={{width: '100%', display: 'relative'}}
       onMouseEnter={() => setShown(true)}
       onMouseLeave={() => setShown(false)}
     >

@@ -4,7 +4,13 @@ import {THEME, ColorScheme, ThemeContext} from './ColorScheme';
 import produce from 'immer';
 import ThemeToggle from './components/ThemeToggle';
 import SettingsButton from './components/SettingsButton';
-import {compareObjects, mergeObjectsInPlace, nicknameGenerator} from './utils';
+import {
+  compareObjects,
+  debounce,
+  KeysMatching,
+  mergeObjectsInPlace,
+  nicknameGenerator,
+} from './utils';
 import {PingJobsButton} from './components/PingJobsButton';
 import TabSelector from './components/TabSelector';
 import MonitorTab from './components/MonitorTab';
@@ -27,25 +33,25 @@ export function getIPAddressInfoByIP(ipAddressInfoArray: IPAddressInfo[], ip: st
 export interface NCPProperties {
   'NCP:ProtocolVersion': string;
   'NCP:Version': string;
-  'NCP:InterfaceType': string;
+  'NCP:InterfaceType': number;
   'NCP:HardwareAddress': string;
-  'NCP:CCAThreshold': string;
-  'NCP:TXPower': string;
+  'NCP:CCAThreshold': number;
+  'NCP:TXPower': number;
   'NCP:Region': string;
-  'NCP:ModeID': string;
+  'NCP:ModeID': number;
   unicastchlist: string;
   broadcastchlist: string;
   asyncchlist: string;
   chspacing: string;
   ch0centerfreq: string;
   'Network:Panid': string;
-  bcdwellinterval: string;
-  ucdwellinterval: string;
-  bcinterval: string;
-  ucchfunction: string;
-  bcchfunction: string;
+  bcdwellinterval: number;
+  ucdwellinterval: number;
+  bcinterval: number;
+  ucchfunction: number;
+  bcchfunction: number;
   macfilterlist: string[];
-  macfiltermode: string;
+  macfiltermode: number;
   'Interface:Up': boolean;
   'Stack:Up': boolean;
   'Network:NodeType': string;
@@ -56,29 +62,31 @@ export interface NCPProperties {
   numconnected: string;
   'IPv6:AllAddresses': string;
 }
+export type NCPStringProperties = KeysMatching<NCPProperties, string>;
+export type NCPNumberProperties = KeysMatching<NCPProperties, number>;
 
 const DEFAULT_NCP_PROPERTY_VALUES = {
   'NCP:ProtocolVersion': '',
   'NCP:Version': '',
-  'NCP:InterfaceType': '',
+  'NCP:InterfaceType': -1,
   'NCP:HardwareAddress': '',
-  'NCP:CCAThreshold': '',
-  'NCP:TXPower': '',
+  'NCP:CCAThreshold': -1,
+  'NCP:TXPower': -Infinity,
   'NCP:Region': '',
-  'NCP:ModeID': '',
+  'NCP:ModeID': -1,
   unicastchlist: '',
   broadcastchlist: '',
   asyncchlist: '',
   chspacing: '',
   ch0centerfreq: '',
   'Network:Panid': '',
-  bcdwellinterval: '',
-  ucdwellinterval: '',
-  bcinterval: '',
-  ucchfunction: '',
-  bcchfunction: '',
+  bcdwellinterval: -1,
+  ucdwellinterval: -1,
+  bcinterval: -1,
+  ucchfunction: -1,
+  bcchfunction: -1,
   macfilterlist: [],
-  macfiltermode: '',
+  macfiltermode: -1,
   'Interface:Up': false,
   'Stack:Up': false,
   'Network:NodeType': '',
@@ -140,7 +148,7 @@ export default class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  updateTopologyAndIPAddressInfoArray = async () => {
+  _updateTopologyAndIPAddressInfoArray = async () => {
     let newTopology: CytoscapeTopology;
     try {
       newTopology = await APIService.getTopology();
@@ -210,11 +218,13 @@ export default class App extends React.Component<AppProps, AppState> {
     });
   };
 
+  updateTopologyAndIPAddressInfoArray = debounce(this._updateTopologyAndIPAddressInfoArray, 10000);
+
   receivedNetworkError(e: unknown) {
     this.setState({connected: false, tabView: TAB_VIEW.INVALID_HOST});
   }
 
-  updatePingbursts = async () => {
+  _updatePingbursts = async () => {
     let newPingbursts: Pingburst[];
     try {
       newPingbursts = await APIService.getPingbursts();
@@ -233,6 +243,7 @@ export default class App extends React.Component<AppProps, AppState> {
       return newState;
     });
   };
+  updatePingbursts = debounce(this._updatePingbursts, 10000);
 
   updateNCPProperties = async () => {
     let newNCPProperties: NCPProperties;

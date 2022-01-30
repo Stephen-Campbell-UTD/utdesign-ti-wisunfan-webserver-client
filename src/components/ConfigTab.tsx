@@ -10,7 +10,7 @@ import {AppContext} from '../Contexts';
 import produce from 'immer';
 import ThemedButton, {THEMED_BUTTON_TYPE} from './ThemedButton';
 import {ThemedSelect} from './ThemedSelect';
-import {NCPProperties} from '../App';
+import {NCPNumberProperties, NCPProperties, NCPStringProperties} from '../App';
 
 /**
  *
@@ -71,7 +71,7 @@ interface ConfigPropertyTextInputProps {
   /**Display Name of Property */
   name: string;
   /**Identifier of Property. Should match server propValues */
-  id: keyof NCPProperties;
+  id: NCPStringProperties;
   /**Value of Property */
   value: string;
   isDisabled?: boolean;
@@ -86,16 +86,7 @@ function ConfigPropertyTextInput(props: ConfigPropertyTextInputProps) {
   const changeHandler = (newText: string) => {
     App.setState(prevState => {
       return produce(prevState, draftState => {
-        if (
-          props.id === 'Stack:Up' ||
-          props.id === 'Interface:Up' ||
-          props.id === 'connecteddevices' ||
-          props.id === 'macfilterlist'
-        ) {
-          throw Error('Non Text Properties configured as ConfigPropertyTextInput');
-        } else {
-          draftState.ncpProperties[props.id] = newText;
-        }
+        draftState.ncpProperties[props.id] = newText;
       });
     });
   };
@@ -112,9 +103,44 @@ function ConfigPropertyTextInput(props: ConfigPropertyTextInputProps) {
   );
 }
 
+interface ConfigPropertyNumberInputProps {
+  /**Display Name of Property */
+  name: string;
+  /**Identifier of Property. Should match server propValues */
+  id: NCPNumberProperties;
+  /**Value of Property */
+  value: number;
+  isDisabled?: boolean;
+}
+function ConfigPropertyNumberInput(props: ConfigPropertyNumberInputProps) {
+  // const isDisabled = props["Stack:Up"] && disabledStackUp.has(props.id);
+  const App = useContext(AppContext);
+  if (App === null) {
+    throw Error('App null and rendering ConfigTextInput');
+  }
+  const changeHandler = (newText: string) => {
+    App.setState(prevState => {
+      return produce(prevState, draftState => {
+        draftState.ncpProperties[props.id] = parseInt(newText, 10);
+      });
+    });
+  };
+  return (
+    <div className="config_label">
+      <ThemedLabel style={{fontSize: 14}}>{props.name}</ThemedLabel>
+      <ThemedInput
+        style={{width: '45%', fontSize: 14}}
+        isDisabled={props.isDisabled}
+        value={props.value.toString(10)}
+        onChange={changeHandler}
+      />
+    </div>
+  );
+}
+
 // https://dev.ti.com/tirex/explore/content/simplelink_cc13x2_26x2_sdk_5_20_00_52/docs/ti_wisunfan/html/wisun-guide/NWP_interface.html
 interface MacFilterModeConfigProps {
-  value: string;
+  value: number;
 }
 function MacFilterModeConfig(props: MacFilterModeConfigProps) {
   const App = useContext(AppContext);
@@ -124,22 +150,22 @@ function MacFilterModeConfig(props: MacFilterModeConfigProps) {
   const onChange = ({value}: {value: string}) => {
     App.setState(prevState => {
       return produce(prevState, draftState => {
-        draftState.ncpProperties['macfiltermode'] = value;
+        draftState.ncpProperties['macfiltermode'] = parseInt(value, 10);
       });
     });
   };
   const options = [
     {
       label: 'Disabled',
-      value: '0',
+      value: 0,
     },
     {
       label: 'Whitelist',
-      value: '1',
+      value: 1,
     },
     {
       label: 'Blacklist',
-      value: '2',
+      value: 2,
     },
   ];
 
@@ -200,7 +226,7 @@ function ConfigProperties(props: ConfigPropertiesProps) {
         isDisabled={true}
       />
 
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="NCP:InterfaceType"
         id="NCP:InterfaceType"
         value={props.ncpProperties['NCP:InterfaceType']}
@@ -212,13 +238,13 @@ function ConfigProperties(props: ConfigPropertiesProps) {
         value={props.ncpProperties['NCP:HardwareAddress']}
         isDisabled={true}
       />
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="NCP:CCAThreshold"
         id="NCP:CCAThreshold"
         value={props.ncpProperties['NCP:CCAThreshold']}
         isDisabled={stackUp}
       />
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="NCP:TXPower"
         id="NCP:TXPower"
         value={props.ncpProperties['NCP:TXPower']}
@@ -230,7 +256,7 @@ function ConfigProperties(props: ConfigPropertiesProps) {
         value={props.ncpProperties['NCP:Region']}
         isDisabled={true}
       />
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="NCP:ModeID"
         id="NCP:ModeID"
         value={props.ncpProperties['NCP:ModeID']}
@@ -269,31 +295,31 @@ function ConfigProperties(props: ConfigPropertiesProps) {
         value={props.ncpProperties['Network:Panid']}
         isDisabled={stackUp}
       />
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="bcdwellinterval"
         id="bcdwellinterval"
         value={props.ncpProperties['bcdwellinterval']}
         isDisabled={stackUp}
       />
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="ucdwellinterval"
         id="ucdwellinterval"
         value={props.ncpProperties['ucdwellinterval']}
         isDisabled={stackUp}
       />
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="bcinterval"
         id="bcinterval"
         value={props.ncpProperties['bcinterval']}
         isDisabled={stackUp}
       />
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="ucchfunction"
         id="ucchfunction"
         value={props.ncpProperties['ucchfunction']}
         isDisabled={stackUp}
       />
-      <ConfigPropertyTextInput
+      <ConfigPropertyNumberInput
         name="bcchfunction"
         id="bcchfunction"
         value={props.ncpProperties['bcchfunction']}
@@ -340,11 +366,12 @@ function NCPStatus(props: NCPStatusProps) {
 }
 
 interface ThemedUnorderedListProps {
-  items: string[];
+  items?: string[];
 }
 
 function ThemedUnorderedList(props: ThemedUnorderedListProps) {
-  const items = props.items.map((item, index) => {
+  let stringItems = props.items ? props.items : ([] as string[]);
+  const items = stringItems.map((item, index) => {
     return (
       <div>
         <ThemedLabel key={`${item}${index}`}>{item}</ThemedLabel>

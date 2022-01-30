@@ -160,3 +160,33 @@ export function nicknameGenerator(seed: number): string {
   const index = seed % nicknames.length;
   return nicknames[index];
 }
+
+export function debounce(func: Function, timeout: number = 300) {
+  let timer: any;
+  return (...args: any[]) => {
+    if (!timer) {
+      timer = setTimeout(() => {
+        timer = undefined;
+      }, timeout);
+      return func(...args);
+    }
+  };
+}
+
+/** Pulls keys of type V out of object of type T  e.g.
+ * type M {a:string, b:number}
+ *
+ * this means KeysMatching<M,string> will only match a e.g
+ * let x : KeysMatching<M,string> = "a" // All good
+ * let y : KeysMatching<M,string> = "b" // Type Error
+ */
+// more examples
+// type M = {
+//   a: string;
+//   b: number;
+//   c: string;
+// };
+// let x: KeysMatching<M, string> = 'a';
+// let y: KeysMatching<M, string> = 'b';
+// let z: KeysMatching<M, string> = 'c';
+export type KeysMatching<T, V> = {[K in keyof T]-?: T[K] extends V ? K : never}[keyof T];
