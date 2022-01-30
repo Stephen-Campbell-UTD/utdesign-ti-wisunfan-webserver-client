@@ -5,13 +5,14 @@ import Pane from './Pane';
 import {ThemedInput} from './ThemedInput';
 import ThemedLabel from './ThemedLabel';
 import StatusIndicator from './StatusIndicator';
-import {useContext, useState} from 'react';
+import {useCallback, useContext, useState} from 'react';
 import {AppContext} from '../Contexts';
 import produce from 'immer';
 import ThemedButton, {THEMED_BUTTON_TYPE} from './ThemedButton';
 import {ThemedSelect} from './ThemedSelect';
 import {NCPNumberProperties, NCPProperties, NCPStringProperties} from '../App';
 import {Topology} from '../types';
+import {APIService} from '../APIService';
 
 interface ConfigPropertyTextInputProps {
   /**Display Name of Property */
@@ -293,6 +294,11 @@ interface NCPStatusProps {
 }
 
 function NCPStatus(props: NCPStatusProps) {
+  const startStack = useCallback(() => {
+    APIService.setProp('Interface:Up', true);
+    APIService.setProp('Stack:Up', true);
+  }, []);
+
   return (
     <div className="ncpStatusContainer">
       <div className="ncpStatusRow">
@@ -304,7 +310,9 @@ function NCPStatus(props: NCPStatusProps) {
         <StatusIndicator isGoodStatus={props.stackUp}></StatusIndicator>
       </div>
       <div className="ncpStatusRow">
-        <ThemedButton themedButtonType={THEMED_BUTTON_TYPE.PRIMARY}>Start</ThemedButton>
+        <ThemedButton onClick={startStack} themedButtonType={THEMED_BUTTON_TYPE.PRIMARY}>
+          Start
+        </ThemedButton>
         <ThemedButton themedButtonType={THEMED_BUTTON_TYPE.SECONDARY}>Reset</ThemedButton>
       </div>
     </div>
