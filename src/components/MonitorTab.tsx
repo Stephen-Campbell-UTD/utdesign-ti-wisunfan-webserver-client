@@ -6,12 +6,12 @@ import Monitor from './Monitor';
 import IPAddressTable from './IPAddressTable';
 import Topology from './Topology';
 import '../App.css';
-import {CytoscapeTopology, IPAddressInfo, Pingburst} from '../types';
+import {CytoscapeGraph, IPAddressInfo, Pingburst} from '../types';
 
 interface MonitorTabProps {
   ipSelectionHandler: (ip: string, newVal: boolean) => void;
   ipAddressInfoArray: IPAddressInfo[];
-  topology: CytoscapeTopology;
+  graph: CytoscapeGraph;
   pingbursts: Pingburst[];
 }
 
@@ -24,7 +24,7 @@ export default function MonitorTab(props: MonitorTabProps) {
             <Topology
               ipSelectionHandler={props.ipSelectionHandler}
               ipAddressInfoArray={props.ipAddressInfoArray}
-              elements={props.topology}
+              elements={props.graph}
             />
           </Tile>
         </div>

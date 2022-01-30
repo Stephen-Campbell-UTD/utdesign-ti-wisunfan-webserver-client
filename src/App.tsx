@@ -16,7 +16,7 @@ import TabSelector from './components/TabSelector';
 import MonitorTab from './components/MonitorTab';
 import ConfigTab from './components/ConfigTab';
 import {AppContext} from './Contexts';
-import {CytoscapeTopology, IPAddressInfo, Pingburst} from './types';
+import {IPAddressInfo, Pingburst, Topology} from './types';
 import {APIService} from './APIService';
 import ConnectBorderRouterMessage from './components/ConnectBorderRouterMessage';
 import InvalidHostMessage from './components/InvalidHostMessage';
@@ -56,10 +56,6 @@ export interface NCPProperties {
   'Stack:Up': boolean;
   'Network:NodeType': string;
   'Network:Name': string;
-  dodagroutedest: string;
-  dodagroute: string;
-  connecteddevices: string[];
-  numconnected: string;
   'IPv6:AllAddresses': string;
 }
 export type NCPStringProperties = KeysMatching<NCPProperties, string>;
@@ -91,10 +87,6 @@ const DEFAULT_NCP_PROPERTY_VALUES = {
   'Stack:Up': false,
   'Network:NodeType': '',
   'Network:Name': '',
-  dodagroutedest: '',
-  dodagroute: '',
-  connecteddevices: [],
-  numconnected: '',
   'IPv6:AllAddresses': '',
 };
 
@@ -106,7 +98,7 @@ enum TAB_VIEW {
 }
 
 interface AppState {
-  readonly topology: CytoscapeTopology;
+  readonly topology: Topology;
   readonly ipAddressInfoArray: IPAddressInfo[];
   readonly pingbursts: Pingburst[];
   readonly connected: boolean;
@@ -120,7 +112,12 @@ export default class App extends React.Component<AppProps, AppState> {
   /** NCP Properties that are compared to when properties for setProps.  */
   cachedNCPProperties: NCPProperties | null = null;
   state = {
-    topology: {nodes: [], edges: []},
+    topology: {
+      numConnected: 0,
+      connectedDevices: [],
+      routes: [],
+      graph: {nodes: [], edges: []},
+    },
     ipAddressInfoArray: [],
     pingbursts: [],
     connected: false,
@@ -149,52 +146,39 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   _updateTopologyAndIPAddressInfoArray = async () => {
-    let newTopology: CytoscapeTopology;
+    let newTopology: Topology;
     try {
       newTopology = await APIService.getTopology();
     } catch (e) {
       console.error(e);
       return;
     }
-    const areEqual = compareObjects(newTopology, this.state.topology);
+    //there is only a real change if the graphs are different
+    const areEqual = compareObjects(newTopology.graph, this.state.topology.graph);
     if (areEqual) {
       return;
     }
     this.setState(state => {
       return produce(state, draft => {
         //find diff of ip_addresses
-        function calcDiffIPs(
-          oldTopology: CytoscapeTopology,
-          newTopology: CytoscapeTopology
-        ): {ipsToAdd: Set<string>; ipsToRemove: Set<string>} {
-          function difference<SetMemberType>(
-            setA: Set<SetMemberType>,
-            setB: Set<SetMemberType>
-          ): Set<SetMemberType> {
-            let _difference = new Set(setA);
-            for (let elem of Array.from(setB)) {
-              _difference.delete(elem);
-            }
-            return _difference;
+        function difference<SetMemberType>(
+          iterA: Iterable<SetMemberType>,
+          iterB: Iterable<SetMemberType>
+        ): Set<SetMemberType> {
+          let _difference = new Set(iterA);
+          for (let elem of Array.from(iterB)) {
+            _difference.delete(elem);
           }
-          const oldIPs = oldTopology.nodes.reduce(
-            (ipSet, node) => ipSet.add(node.data.id),
-            new Set<string>()
-          );
-          const newIPs = newTopology.nodes.reduce(
-            (ipSet, node) => ipSet.add(node.data.id),
-            new Set<string>()
-          );
-
-          let ipsToAdd = difference<string>(newIPs, oldIPs);
-          let ipsToRemove = difference<string>(oldIPs, newIPs);
-          return {
-            ipsToAdd,
-            ipsToRemove,
-          };
+          return _difference;
         }
-
-        const {ipsToAdd, ipsToRemove} = calcDiffIPs(draft.topology, newTopology);
+        const ipsToRemove = difference(
+          this.state.topology.connectedDevices,
+          newTopology.connectedDevices
+        );
+        const ipsToAdd = difference(
+          newTopology.connectedDevices,
+          this.state.topology.connectedDevices
+        );
         let ipsToAddArray = Array.from(ipsToAdd);
         //Add new entries to ipAddressInfoArray
 
@@ -213,7 +197,9 @@ export default class App extends React.Component<AppProps, AppState> {
           ipInfo => !ipsToRemove.has(ipInfo.ipAddress)
         );
 
-        draft.topology = newTopology;
+        draft.topology.connectedDevices = newTopology.connectedDevices;
+        draft.topology.numConnected = newTopology.numConnected;
+        draft.topology.graph = newTopology.graph;
       });
     });
   };
@@ -243,7 +229,7 @@ export default class App extends React.Component<AppProps, AppState> {
       return newState;
     });
   };
-  updatePingbursts = debounce(this._updatePingbursts, 10000);
+  updatePingbursts = debounce(this._updatePingbursts, 500);
 
   updateNCPProperties = async () => {
     let newNCPProperties: NCPProperties;
@@ -348,11 +334,12 @@ export default class App extends React.Component<AppProps, AppState> {
         this.state.theme === 'ti' ? ColorScheme.getColor('red', THEME.TI) : 'rgba(0,0,0,0)',
     };
 
-    const ipSelectionHandler = this.ipSelectionHandler;
     let currentTab = null;
     switch (this.state.tabView) {
       case TAB_VIEW.CONFIG:
-        currentTab = <ConfigTab ncpProperties={this.state.ncpProperties} />;
+        currentTab = (
+          <ConfigTab topology={this.state.topology} ncpProperties={this.state.ncpProperties} />
+        );
         break;
       case TAB_VIEW.CONNECT:
         currentTab = <ConnectBorderRouterMessage />;
@@ -364,10 +351,10 @@ export default class App extends React.Component<AppProps, AppState> {
       default:
         currentTab = (
           <MonitorTab
-            {...{
-              ipSelectionHandler,
-              ...this.state,
-            }}
+            ipSelectionHandler={this.ipSelectionHandler}
+            ipAddressInfoArray={this.state.ipAddressInfoArray}
+            graph={this.state.topology.graph}
+            pingbursts={this.state.pingbursts}
           />
         );
         break;

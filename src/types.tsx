@@ -33,7 +33,7 @@ export interface CytoscapeEdge {
   };
 }
 
-export interface CytoscapeTopology {
+export interface CytoscapeGraph {
   nodes: CytoscapeNode[];
   edges: CytoscapeEdge[];
 }
@@ -102,4 +102,10 @@ export class ColorThresholds {
     }
     return this.colors[index];
   }
+}
+export interface Topology {
+  graph: CytoscapeGraph;
+  numConnected: number;
+  connectedDevices: string[];
+  routes: string[][];
 }

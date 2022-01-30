@@ -181,7 +181,7 @@ export function PingJobMonitor(props: PingJobMonitorProps) {
     },
   ];
   const tableProps: FlexTableProps<PingJobTable, PingJobRow> = {
-    rowKeyGenerator: (index: number, row: PingJobRow) => row.id.toString(10),
+    rowKeyGenerator: (index: number, table: PingJobTable) => table.records[index].id.toString(10),
     tableData: {
       records: pingJobRows,
     },
@@ -191,7 +191,7 @@ export function PingJobMonitor(props: PingJobMonitorProps) {
 
   return reactDom.createPortal(
     <div className="ping_job_monitor_container">
-      {React.createElement(props => FlexTable<PingJobTable, PingJobRow>(props), tableProps)}
+      <FlexTable<PingJobTable, PingJobRow> {...tableProps} />
     </div>,
     document.body
   );

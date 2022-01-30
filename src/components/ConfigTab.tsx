@@ -11,61 +11,7 @@ import produce from 'immer';
 import ThemedButton, {THEMED_BUTTON_TYPE} from './ThemedButton';
 import {ThemedSelect} from './ThemedSelect';
 import {NCPNumberProperties, NCPProperties, NCPStringProperties} from '../App';
-
-/**
- *
- * ti-widget-tab
- * ti-widget-container
- * ti-widget-tilecontainer
- * ti-widget-droplist
- *
- */
-
-// const mainProps = [
-//   // network_protocolversion:{ id:"NCP:ProtocolVersion",displayName, alwaysDisabled : true, component: InputText}
-//   "NCP:Version",
-//   "NCP:InterfaceType",
-//   "NCP:HardwareAddress",
-//   "NCP:CCAThreshold",
-//   "NCP:TXPower",
-//   "NCP:Region",
-//   "NCP:ModeID",
-//   "unicastchlist",
-//   "broadcastchlist",
-//   "asyncchlist",
-//   "chspacing",
-//   "ch0centerfreq",
-//   "Network:Panid",
-//   "bcdwellinterval",
-//   "ucdwellinterval",
-//   "bcinterval",
-//   "ucchfunction",
-//   "bcchfunction",
-//   "macfiltermode",
-//   "Network:NodeType",
-//   "Network:Name",
-// ];
-// const idStartPropMap = {
-//   interfaceup_1: "Interface:Up",
-//   stackup_1: "Stack:Up",
-// };
-// const idOtherPropMap = {
-//   get_numconnecteddevices_1: "numconnected",
-//   get_connecteddevices_1: "connecteddevices",
-//   get_dodagroute_1: "dodagroute",
-//   get_ipv6alladdresses_1: "IPv6:AllAddresses",
-//   get_macfilterlist_1: "macfilterlist",
-// };
-// const disabledStackUp = new Set<keyof NCPProperties>([
-//   "NCP:CCAThreshold",
-//   "NCP:TXPower",
-//   "Network:Panid",
-//   "bcdwellinterval",
-//   "ucdwellinterval",
-//   "bcinterval",
-//   "ucchfunction",
-//   "bcchfunction",
-// ]);
+import {Topology} from '../types';
 
 interface ConfigPropertyTextInputProps {
   /**Display Name of Property */
@@ -436,6 +382,7 @@ function NetworkProperties(props: NetworkPropertiesProps) {
 
 interface ConfigTabProps {
   ncpProperties: NCPProperties;
+  topology: Topology;
 }
 
 export default function ConfigTab(props: ConfigTabProps) {
@@ -445,7 +392,7 @@ export default function ConfigTab(props: ConfigTabProps) {
         <div className="tile_container_full tile_container_common">
           <Tile title="Network Properties">
             <NetworkProperties
-              connecteddevices={props.ncpProperties.connecteddevices}
+              connecteddevices={props.topology.connectedDevices}
               macfilterlist={props.ncpProperties.macfilterlist}
             />
           </Tile>

@@ -1,4 +1,4 @@
-import React, {ReactElement} from 'react';
+import React, {ReactElement, useCallback} from 'react';
 import MagnitudeIndicator from './MagnitudeIndicator';
 import downloadIcon from '../icons/downloadIcon.svg';
 import {getIPAddressInfoByIP} from '../App';
@@ -144,21 +144,33 @@ export default function PingLog(props: PingLogProps) {
     });
   });
   // the startDate is minus in order to sort form latest -> oldest
-  sort(tableData.records, datum => -datum.startDate);
+  tableData.records = sort(tableData.records, datum => -datum.startDate);
+  function onItemsRendered({
+    overscanStartIndex,
+    overscanStopIndex,
+    visibleStartIndex,
+    visibleStopIndex,
+  }: {
+    overscanStartIndex: number;
+    overscanStopIndex: number;
+    visibleStartIndex: number;
+    visibleStopIndex: number;
+  }) {
+    console.log(overscanStartIndex, overscanStopIndex, visibleStartIndex, visibleStopIndex);
+    // All index params are numbers.
+  }
+  const rowKeyGenerator = useCallback((index: number, tableData: PingLogTable) => {
+    const pingLogRow = tableData.records[index];
+    const key = `${pingLogRow.start} ${pingLogRow.burstID}`;
+    return key;
+  }, []);
 
   const tableProps: FlexTableProps<PingLogTable, PingLogRow> = {
-    rowKeyGenerator: (index: number, pingLogRow: PingLogRow) => {
-      return `${pingLogRow.start} ${pingLogRow.burstID}`;
-    },
+    rowKeyGenerator,
     tableData,
     dataToElementsMapper: pingDataToElementsMapper,
     tableFormat,
+    onItemsRendered,
   };
-  // const PingLogTableComponent = FlexTable<PingLogTable,PingLogRow>
-  return React.createElement(
-    // (props) => FlexTable<PingLogTable, PingLogRow>(props),
-    props => FlexTable<PingLogTable, PingLogRow>(props),
-    tableProps
-  );
-  // return <FlexTable {...tableProps}></FlexTable>;
+  return <FlexTable<PingLogTable, PingLogRow> {...tableProps}></FlexTable>;
 }

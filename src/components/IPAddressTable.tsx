@@ -4,7 +4,7 @@ import FlexTable from './FlexTable';
 import '../assets/IPAddressTable.css';
 import Tooltip from './Tooltip';
 import {FlexTableFormat, IPAddressInfo} from '../types';
-import {ReactElement} from 'react';
+import {ReactElement, useCallback} from 'react';
 import React from 'react';
 
 interface IPAddressRow extends IPAddressInfo {
@@ -113,16 +113,17 @@ export default function IPAddressTable(props: IPAddressTableProps) {
     };
   });
 
+  const rowKeyGenerator = useCallback(
+    (index: number, table: IPAddressTableDataType) => table.records[index].id,
+    []
+  );
   const tableProps = {
-    rowKeyGenerator: (index: number, row: IPAddressRow) => row.id,
+    rowKeyGenerator,
     tableData: {
       records: tableRows,
     },
     dataToElementsMapper: ipDataToElementsMapper,
     tableFormat,
   };
-  return React.createElement(
-    props => FlexTable<IPAddressTableDataType, IPAddressRow>(props),
-    tableProps
-  );
+  return <FlexTable<IPAddressTableDataType, IPAddressRow> {...tableProps} />;
 }

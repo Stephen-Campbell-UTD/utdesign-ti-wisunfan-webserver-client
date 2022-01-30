@@ -1,4 +1,4 @@
-import React, {ReactElement, useContext, useEffect, useRef, useState} from 'react';
+import React, {ReactElement, useCallback, useContext, useEffect, useRef, useState} from 'react';
 import {ColorScheme, THEME, ThemeContext} from '../ColorScheme';
 import {FixedSizeList} from 'react-window';
 import {
@@ -66,11 +66,12 @@ export interface FlexTableProps<TableDataType extends FlexTableDataType<RowDataT
     tableData: TableDataType,
     {columnWidths, theme}: {columnWidths: number[]; theme: THEME}
   ) => (ReactElement | string)[];
-  rowKeyGenerator: (index: number, rowData: RowDataType) => string;
+  rowKeyGenerator: (index: number, tableData: TableDataType) => string;
   tableData: TableDataType;
   tableFormat: FlexTableFormat;
   rowHeight?: number;
   numVisibleRows?: number;
+  onItemsRendered?: any;
 }
 
 interface FlexTableTheme {
@@ -199,8 +200,10 @@ export default function FlexTable<
         itemCount={itemCount}
         itemSize={rowHeight}
         width="100%"
-        itemKey={index => props.rowKeyGenerator(index, props.tableData.records[index])}
+        itemData={props.tableData}
+        itemKey={props.rowKeyGenerator}
         overscanCount={5}
+        onItemsRendered={props.onItemsRendered}
       >
         {RowRenderer}
       </FixedSizeList>

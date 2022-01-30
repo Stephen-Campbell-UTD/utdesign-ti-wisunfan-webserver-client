@@ -4,7 +4,7 @@ import cytoscape from 'cytoscape';
 import CytoscapeComponent from 'react-cytoscapejs';
 import dagre from 'cytoscape-dagre';
 import produce from 'immer';
-import {CytoscapeTopology, IPAddressInfo} from '../types';
+import {CytoscapeGraph, IPAddressInfo} from '../types';
 import {ComponentThemeImplementations} from '../utils';
 // import "../assets/Pane.css";
 cytoscape.use(dagre);
@@ -12,7 +12,7 @@ cytoscape.use(dagre);
 interface TopologyProps {
   ipAddressInfoArray: IPAddressInfo[];
   ipSelectionHandler: (ip: string, isSelected: boolean) => void;
-  elements: CytoscapeTopology;
+  elements: CytoscapeGraph;
 }
 
 interface TopologyTheme {

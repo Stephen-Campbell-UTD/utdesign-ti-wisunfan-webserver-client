@@ -1,5 +1,5 @@
 import {NCPProperties} from './App';
-import {CytoscapeTopology, Pingburst, PingburstAbortStatus, PingburstCreateRequest} from './types';
+import {Pingburst, PingburstAbortStatus, PingburstCreateRequest, Topology} from './types';
 
 export class APIService {
   static host: string = 'http://localhost:8000';
@@ -29,7 +29,7 @@ export class APIService {
     }
   }
 
-  static async getTopology(): Promise<CytoscapeTopology> {
+  static async getTopology(): Promise<Topology> {
     return await APIService.fetchJSON('/topology');
   }
   static async getProps(): Promise<NCPProperties> {
