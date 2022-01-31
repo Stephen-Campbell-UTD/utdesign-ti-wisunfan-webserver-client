@@ -127,7 +127,8 @@ export class ComponentThemeImplementations<ComponentThemeType> {
   }
 }
 
-export function nicknameGenerator(seed: number): string {
+const usedNicknamesCache = new Set<string>();
+export function nicknameGenerator(seed: string): string {
   const nicknames = [
     'Alfa',
     'Bravo',
@@ -157,8 +158,23 @@ export function nicknameGenerator(seed: number): string {
     'Zulu',
   ];
   // const index = Math.floor(Math.random() * nicknames.length);
-  const index = seed % nicknames.length;
-  return nicknames[index];
+  let newNicknameFound = false;
+  let nickname = '';
+  while (!newNicknameFound) {
+    let seedNum = seed
+      .split('')
+      .map(char => char.charCodeAt(0))
+      .reduce((prev, curr) => prev + curr, 0);
+    const index = seedNum % nicknames.length;
+    nickname = nicknames[index];
+    newNicknameFound = !usedNicknamesCache.has(nickname);
+    if (usedNicknamesCache.size === nicknames.length) {
+      throw Error('Out of nicknames');
+    }
+  }
+
+  usedNicknamesCache.add(nickname);
+  return nickname;
 }
 
 export function debounce(func: Function, timeout: number = 300) {

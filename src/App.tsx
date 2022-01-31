@@ -182,8 +182,8 @@ export default class App extends React.Component<AppProps, AppState> {
         let ipsToAddArray = Array.from(ipsToAdd);
         //Add new entries to ipAddressInfoArray
 
-        const ipAddressInfoToAdd = ipsToAddArray.map((ipAddress: string, index: number) => {
-          const nickname = nicknameGenerator(index);
+        const ipAddressInfoToAdd = ipsToAddArray.map((ipAddress: string) => {
+          const nickname = nicknameGenerator(ipAddress);
           return {
             isSelected: false,
             ipAddress,
