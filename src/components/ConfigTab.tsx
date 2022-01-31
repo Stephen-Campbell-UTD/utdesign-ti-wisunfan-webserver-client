@@ -326,9 +326,10 @@ interface ThemedUnorderedListProps {
 function ThemedUnorderedList(props: ThemedUnorderedListProps) {
   let stringItems = props.items ? props.items : ([] as string[]);
   const items = stringItems.map((item, index) => {
+    const key = `${index}${item}`;
     return (
-      <div>
-        <ThemedLabel key={`${item}${index}`}>{item}</ThemedLabel>
+      <div key={key}>
+        <ThemedLabel key={`${key}`}>{item}</ThemedLabel>
       </div>
     );
   });

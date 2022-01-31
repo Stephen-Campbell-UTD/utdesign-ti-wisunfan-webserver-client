@@ -1,4 +1,4 @@
-import React, {ReactElement, useCallback, useContext, useEffect, useRef, useState} from 'react';
+import React, {ReactElement, useContext, useEffect, useRef, useState} from 'react';
 import {ColorScheme, THEME, ThemeContext} from '../ColorScheme';
 import {FixedSizeList} from 'react-window';
 import {

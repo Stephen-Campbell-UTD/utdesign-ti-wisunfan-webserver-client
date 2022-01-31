@@ -156,7 +156,6 @@ export default function PingLog(props: PingLogProps) {
     visibleStartIndex: number;
     visibleStopIndex: number;
   }) {
-    console.log(overscanStartIndex, overscanStopIndex, visibleStartIndex, visibleStopIndex);
     // All index params are numbers.
   }
   const rowKeyGenerator = useCallback((index: number, tableData: PingLogTable) => {
