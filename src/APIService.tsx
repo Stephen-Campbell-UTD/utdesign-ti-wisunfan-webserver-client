@@ -45,7 +45,11 @@ export class APIService {
   }
 
   static async getConnected(): Promise<boolean> {
-    return await APIService.fetchJSON('/connected');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 500);
+    const success = await APIService.fetchJSON('/connected', {signal: controller.signal});
+    clearTimeout(timeoutId);
+    return success;
   }
 
   //** Initiate a pingburst */
