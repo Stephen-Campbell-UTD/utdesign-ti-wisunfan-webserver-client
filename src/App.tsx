@@ -31,63 +31,65 @@ export function getIPAddressInfoByIP(ipAddressInfoArray: IPAddressInfo[], ip: st
 }
 
 export interface NCPProperties {
-  'NCP:ProtocolVersion': string;
-  'NCP:Version': string;
-  'NCP:InterfaceType': number;
-  'NCP:HardwareAddress': string;
-  'NCP:CCAThreshold': number;
-  'NCP:TXPower': number;
-  'NCP:Region': string;
-  'NCP:ModeID': number;
-  unicastchlist: string;
-  broadcastchlist: string;
-  asyncchlist: string;
-  chspacing: string;
-  ch0centerfreq: string;
-  'Network:Panid': string;
-  bcdwellinterval: number;
-  ucdwellinterval: number;
-  bcinterval: number;
-  ucchfunction: number;
-  bcchfunction: number;
-  macfilterlist: string[];
-  macfiltermode: number;
-  'Interface:Up': boolean;
-  'Stack:Up': boolean;
-  'Network:NodeType': string;
-  'Network:Name': string;
-  'IPv6:AllAddresses': string;
+  'NCP:State': string | null;
+  'NCP:ProtocolVersion': string | null;
+  'NCP:Version': string | null;
+  'NCP:InterfaceType': number | null;
+  'NCP:HardwareAddress': string | null;
+  'NCP:CCAThreshold': number | null;
+  'NCP:TXPower': number | null;
+  'NCP:Region': string | null;
+  'NCP:ModeID': number | null;
+  unicastchlist: string | null;
+  broadcastchlist: string | null;
+  asyncchlist: string | null;
+  chspacing: string | null;
+  ch0centerfreq: string | null;
+  'Network:Panid': string | null;
+  bcdwellinterval: number | null;
+  ucdwellinterval: number | null;
+  bcinterval: number | null;
+  ucchfunction: number | null;
+  bcchfunction: number | null;
+  macfilterlist: string[] | null;
+  macfiltermode: number | null;
+  'Interface:Up': boolean | null;
+  'Stack:Up': boolean | null;
+  'Network:NodeType': string | null;
+  'Network:Name': string | null;
+  'IPv6:AllAddresses': string | null;
 }
-export type NCPStringProperties = KeysMatching<NCPProperties, string>;
-export type NCPNumberProperties = KeysMatching<NCPProperties, number>;
+export type NCPStringProperties = KeysMatching<NCPProperties, string | null>;
+export type NCPNumberProperties = KeysMatching<NCPProperties, number | null>;
 
 const DEFAULT_NCP_PROPERTY_VALUES = {
-  'NCP:ProtocolVersion': '',
-  'NCP:Version': '',
-  'NCP:InterfaceType': -1,
-  'NCP:HardwareAddress': '',
-  'NCP:CCAThreshold': -1,
-  'NCP:TXPower': -Infinity,
-  'NCP:Region': '',
-  'NCP:ModeID': -1,
-  unicastchlist: '',
-  broadcastchlist: '',
-  asyncchlist: '',
-  chspacing: '',
-  ch0centerfreq: '',
-  'Network:Panid': '',
-  bcdwellinterval: -1,
-  ucdwellinterval: -1,
-  bcinterval: -1,
-  ucchfunction: -1,
-  bcchfunction: -1,
-  macfilterlist: [],
-  macfiltermode: -1,
-  'Interface:Up': false,
-  'Stack:Up': false,
-  'Network:NodeType': '',
-  'Network:Name': '',
-  'IPv6:AllAddresses': '',
+  'NCP:State': null,
+  'NCP:ProtocolVersion': null,
+  'NCP:Version': null,
+  'NCP:InterfaceType': null,
+  'NCP:HardwareAddress': null,
+  'NCP:CCAThreshold': null,
+  'NCP:TXPower': null,
+  'NCP:Region': null,
+  'NCP:ModeID': null,
+  unicastchlist: null,
+  broadcastchlist: null,
+  asyncchlist: null,
+  chspacing: null,
+  ch0centerfreq: null,
+  'Network:Panid': null,
+  bcdwellinterval: null,
+  ucdwellinterval: null,
+  bcinterval: null,
+  ucchfunction: null,
+  bcchfunction: null,
+  macfilterlist: null,
+  macfiltermode: null,
+  'Interface:Up': null,
+  'Stack:Up': null,
+  'Network:NodeType': null,
+  'Network:Name': null,
+  'IPv6:AllAddresses': null,
 };
 
 enum TAB_VIEW {

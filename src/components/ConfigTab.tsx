@@ -13,6 +13,7 @@ import {ThemedSelect} from './ThemedSelect';
 import {NCPNumberProperties, NCPProperties, NCPStringProperties} from '../App';
 import {Topology} from '../types';
 import {APIService} from '../APIService';
+import {NCPStateIndicator} from './NCPStateIndicator';
 
 interface ConfigPropertyTextInputProps {
   /**Display Name of Property */
@@ -20,7 +21,7 @@ interface ConfigPropertyTextInputProps {
   /**Identifier of Property. Should match server propValues */
   id: NCPStringProperties;
   /**Value of Property */
-  value: string;
+  value: string | null;
   isDisabled?: boolean;
 }
 
@@ -56,11 +57,10 @@ interface ConfigPropertyNumberInputProps {
   /**Identifier of Property. Should match server propValues */
   id: NCPNumberProperties;
   /**Value of Property */
-  value: number;
+  value: number | null;
   isDisabled?: boolean;
 }
 function ConfigPropertyNumberInput(props: ConfigPropertyNumberInputProps) {
-  // const isDisabled = props["Stack:Up"] && disabledStackUp.has(props.id);
   const App = useContext(AppContext);
   if (App === null) {
     throw Error('App null and rendering ConfigTextInput');
@@ -78,7 +78,7 @@ function ConfigPropertyNumberInput(props: ConfigPropertyNumberInputProps) {
       <ThemedInput
         style={{width: '45%', fontSize: 14}}
         isDisabled={props.isDisabled}
-        value={props.value.toString(10)}
+        value={typeof props.value === 'number' ? props.value.toString(10) : null}
         onChange={changeHandler}
       />
     </div>
@@ -87,7 +87,7 @@ function ConfigPropertyNumberInput(props: ConfigPropertyNumberInputProps) {
 
 // https://dev.ti.com/tirex/explore/content/simplelink_cc13x2_26x2_sdk_5_20_00_52/docs/ti_wisunfan/html/wisun-guide/NWP_interface.html
 interface MacFilterModeConfigProps {
-  value: number;
+  value: number | null;
 }
 function MacFilterModeConfig(props: MacFilterModeConfigProps) {
   const App = useContext(AppContext);
@@ -136,7 +136,8 @@ interface ConfigPropertiesProps {
 }
 
 function ConfigProperties(props: ConfigPropertiesProps) {
-  const {['Stack:Up' as 'Stack:Up']: stackUp} = props.ncpProperties;
+  let {['Stack:Up' as 'Stack:Up']: stackUp} = props.ncpProperties;
+  stackUp = stackUp === null ? false : stackUp;
   const App = useContext(AppContext);
   if (App === null) {
     throw Error('App null and rendering ConfigTextInput');
@@ -289,38 +290,49 @@ function ConfigProperties(props: ConfigPropertiesProps) {
 }
 
 interface NCPStatusProps {
-  interfaceUp: boolean;
-  stackUp: boolean;
+  interfaceUp: boolean | null;
+  stackUp: boolean | null;
+  ncpState: string | null;
 }
 
 function NCPStatus(props: NCPStatusProps) {
-  const startStack = useCallback(() => {
-    APIService.setProp('Interface:Up', true);
-    APIService.setProp('Stack:Up', true);
+  const startStack = useCallback(async () => {
+    await APIService.setProp('Interface:Up', true);
+    await APIService.setProp('Stack:Up', true);
+  }, []);
+  const sendReset = useCallback(async () => {
+    await APIService.getReset();
   }, []);
 
   return (
     <div className="ncpStatusContainer">
       <div className="ncpStatusRow">
+        <ThemedLabel style={{fontSize: 24}}>
+          <NCPStateIndicator ncpState={props.ncpState} />
+        </ThemedLabel>
+      </div>
+      <div className="ncpStatusRow">
         <ThemedLabel style={{fontSize: 24}}>Interface Up</ThemedLabel>
-        <StatusIndicator isGoodStatus={props.interfaceUp}></StatusIndicator>
+        <StatusIndicator isGoodStatus={Boolean(props.interfaceUp)}></StatusIndicator>
       </div>
       <div className="ncpStatusRow">
         <ThemedLabel style={{fontSize: 24}}>Stack Up</ThemedLabel>
-        <StatusIndicator isGoodStatus={props.stackUp}></StatusIndicator>
+        <StatusIndicator isGoodStatus={Boolean(props.stackUp)}></StatusIndicator>
       </div>
       <div className="ncpStatusRow">
         <ThemedButton onClick={startStack} themedButtonType={THEMED_BUTTON_TYPE.PRIMARY}>
           Start
         </ThemedButton>
-        <ThemedButton themedButtonType={THEMED_BUTTON_TYPE.SECONDARY}>Reset</ThemedButton>
+        <ThemedButton onClick={sendReset} themedButtonType={THEMED_BUTTON_TYPE.SECONDARY}>
+          Reset
+        </ThemedButton>
       </div>
     </div>
   );
 }
 
 interface ThemedUnorderedListProps {
-  items?: string[];
+  items?: string[] | null;
 }
 
 function ThemedUnorderedList(props: ThemedUnorderedListProps) {
@@ -349,7 +361,7 @@ function ThemedUnorderedList(props: ThemedUnorderedListProps) {
 
 interface NetworkPropertiesProps {
   connecteddevices: string[];
-  macfilterlist: string[];
+  macfilterlist: string[] | null;
 }
 
 enum NETWORK_PROPERTIES {
@@ -416,8 +428,9 @@ export default function ConfigTab(props: ConfigTabProps) {
       </Pane>
       <Pane>
         <div className="tile_container_full tile_container_common">
-          <Tile style={{minHeight: 200}} title="NCP Status">
+          <Tile style={{minHeight: 0}} title="NCP Status">
             <NCPStatus
+              ncpState={props.ncpProperties['NCP:State']}
               stackUp={props.ncpProperties['Stack:Up']}
               interfaceUp={props.ncpProperties['Interface:Up']}
             ></NCPStatus>

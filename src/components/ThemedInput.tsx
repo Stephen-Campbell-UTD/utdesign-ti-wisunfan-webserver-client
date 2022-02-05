@@ -4,14 +4,7 @@ import '../assets/ThemedInput.css';
 import {ColorScheme, THEME, ThemeContext} from '../ColorScheme';
 import {ComponentThemeImplementations} from '../utils';
 import {CSSInterpolation} from '@emotion/serialize';
-
-export interface ThemedInputProps {
-  isDisabled?: boolean;
-  className?: string;
-  style?: React.CSSProperties;
-  value: string;
-  onChange: (newValue: string) => void;
-}
+import {LoadingBars} from './LoadingBars';
 
 export interface ThemedInputTheme {
   inputStyle: CSSInterpolation;
@@ -52,26 +45,55 @@ const gruvboxThemedInputTheme = {
 };
 themedInputThemeImplementations.set(THEME.GRUVBOX, gruvboxThemedInputTheme);
 
-export function ThemedInput(props: ThemedInputProps) {
+const loadingBarsStyle = {
+  position: 'absolute' as 'absolute',
+  height: '80%',
+  marginLeft: 'auto',
+  marginRight: 'auto',
+  marginTop: 'auto',
+  marginBottom: 'auto',
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+  // zIndex: 10,
+};
+
+export interface ThemedInputProps {
+  isDisabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  //if value is null the input will go into a "loading" state
+  value: string | null;
+  onChange: (newValue: string) => void;
+}
+
+export function ThemedInput({
+  isDisabled = false,
+  className = '',
+  style = {},
+  value = null,
+  onChange = () => {},
+}: ThemedInputProps) {
   const theme = useContext(ThemeContext);
   let {inputStyle} = themedInputThemeImplementations.get(theme);
-  const {onChange} = props;
   const onChangeHandler = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
     [onChange]
   );
-  const isDisabled = props.isDisabled || false;
-  const propsStyle = props.style || {};
+  const isLoading = value === null;
   return (
-    <input
-      disabled={isDisabled}
-      className={'themed_input '.concat(props.className || '')}
-      type="text"
-      css={inputStyle}
-      style={propsStyle}
-      spellCheck="false"
-      value={props.value}
-      onChange={onChangeHandler}
-    />
+    <div style={{position: 'relative', ...style}} className={className}>
+      {isLoading && <LoadingBars style={loadingBarsStyle} />}
+      <input
+        css={inputStyle}
+        disabled={isDisabled || isLoading}
+        className={'themed_input '}
+        type="text"
+        spellCheck="false"
+        value={value === null ? '' : value}
+        onChange={onChangeHandler}
+      />
+    </div>
   );
 }

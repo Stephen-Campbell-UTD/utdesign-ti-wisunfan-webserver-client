@@ -110,6 +110,7 @@ export default function Slider(props: SliderProps) {
         onChange={changeHandler}
       />
       <ThemedInput
+        style={{position: 'absolute'}}
         className="slider_input"
         value={props.value.toString(10)}
         onChange={textChangeHandler}

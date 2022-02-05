@@ -29,6 +29,10 @@ export class APIService {
     }
   }
 
+  static async getReset(): Promise<boolean> {
+    const {wasSuccess} = await APIService.fetchJSON('/reset');
+    return wasSuccess;
+  }
   static async getTopology(): Promise<Topology> {
     return await APIService.fetchJSON('/topology');
   }
