@@ -127,53 +127,65 @@ export class ComponentThemeImplementations<ComponentThemeType> {
   }
 }
 
-const usedNicknamesCache = new Set<string>();
+export const usedNicknamesCacheIPToNN = new Map<string, string>();
+export const usedNicknamesCacheNNToIP = new Map<string, string>();
+
+const nicknames = [
+  'Alfa',
+  'Bravo',
+  'Charlie',
+  'Delta',
+  'Echo',
+  'Foxtrot',
+  'Golf',
+  'Hotel',
+  'India',
+  'Juliett',
+  'Kilo',
+  'Lima',
+  'Mike',
+  'November',
+  'Oscar',
+  'Papa',
+  'Quebec',
+  'Romeo',
+  'Sierra',
+  'Tango',
+  'Uniform',
+  'Victor',
+  'Whiskey',
+  'X-ray',
+  'Yankee',
+  'Zulu',
+];
 export function nicknameGenerator(seed: string): string {
-  const nicknames = [
-    'Alfa',
-    'Bravo',
-    'Charlie',
-    'Delta',
-    'Echo',
-    'Foxtrot',
-    'Golf',
-    'Hotel',
-    'India',
-    'Juliett',
-    'Kilo',
-    'Lima',
-    'Mike',
-    'November',
-    'Oscar',
-    'Papa',
-    'Quebec',
-    'Romeo',
-    'Sierra',
-    'Tango',
-    'Uniform',
-    'Victor',
-    'Whiskey',
-    'X-ray',
-    'Yankee',
-    'Zulu',
-  ];
-  // const index = Math.floor(Math.random() * nicknames.length);
+  const potentialNickname = usedNicknamesCacheIPToNN.get(seed);
+  if (potentialNickname !== undefined) {
+    return potentialNickname;
+  }
   let newNicknameFound = false;
   let nickname = '';
+  const maxIterations = 1000;
+  let iterations = 0;
+  let seedNum = seed
+    .split('')
+    .map(char => char.charCodeAt(0))
+    .reduce((prev, curr) => prev + curr, 0);
   while (!newNicknameFound) {
-    let seedNum = seed
-      .split('')
-      .map(char => char.charCodeAt(0))
-      .reduce((prev, curr) => prev + curr, 0);
-    const index = seedNum % nicknames.length;
+    const index = (seedNum + iterations) % nicknames.length;
     nickname = nicknames[index];
-    newNicknameFound = !usedNicknamesCache.has(nickname);
-    if (usedNicknamesCache.size === nicknames.length) {
+    newNicknameFound = !usedNicknamesCacheNNToIP.has(nickname);
+
+    if (usedNicknamesCacheNNToIP.size === nicknames.length) {
       throw Error('Out of nicknames');
+    } else if (iterations > maxIterations) {
+      throw Error('Nickname gen required more than 1000 iterations');
     }
+    iterations++;
   }
 
-  usedNicknamesCache.add(nickname);
+  usedNicknamesCacheNNToIP.set(nickname, seed);
+  usedNicknamesCacheIPToNN.set(seed, nickname);
   return nickname;
 }
 

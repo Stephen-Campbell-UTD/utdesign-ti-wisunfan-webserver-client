@@ -13,6 +13,14 @@ export interface FontSpec {
   weight: string;
 }
 
+export interface BorderRouterIPEntry {
+  ip: string;
+  prefixLen: number;
+  origin: string;
+  valid: string;
+  preferred: string;
+}
+
 export interface IPAddressInfo {
   ipAddress: string;
   isSelected: boolean;
@@ -108,4 +116,9 @@ export interface Topology {
   numConnected: number;
   connectedDevices: string[];
   routes: string[][];
+}
+
+export interface RequestStatus {
+  wasSuccess: boolean;
+  message?: string;
 }

@@ -34,7 +34,7 @@ function ConfigPropertyTextInput(props: ConfigPropertyTextInputProps) {
   const changeHandler = (newText: string) => {
     App.setState(prevState => {
       return produce(prevState, draftState => {
-        draftState.ncpProperties[props.id] = newText;
+        draftState.dirtyNCPProperties[props.id] = newText;
       });
     });
   };
@@ -68,7 +68,7 @@ function ConfigPropertyNumberInput(props: ConfigPropertyNumberInputProps) {
   const changeHandler = (newText: string) => {
     App.setState(prevState => {
       return produce(prevState, draftState => {
-        draftState.ncpProperties[props.id] = parseInt(newText, 10);
+        draftState.dirtyNCPProperties[props.id] = parseInt(newText, 10);
       });
     });
   };
@@ -133,6 +133,7 @@ function MacFilterModeConfig(props: MacFilterModeConfigProps) {
 
 interface ConfigPropertiesProps {
   ncpProperties: NCPProperties;
+  dirtyNCPProperties: Partial<NCPProperties>;
 }
 
 function ConfigProperties(props: ConfigPropertiesProps) {
@@ -156,7 +157,7 @@ function ConfigProperties(props: ConfigPropertiesProps) {
       >
         <ThemedButton
           themedButtonType={THEMED_BUTTON_TYPE.PRIMARY}
-          onClick={App.updateNCPProperties}
+          onClick={App.clearDirtyNCPProperties}
         >
           Get
         </ThemedButton>
@@ -170,120 +171,135 @@ function ConfigProperties(props: ConfigPropertiesProps) {
       <ConfigPropertyTextInput
         name="NCP:Version"
         id="NCP:Version"
-        value={props.ncpProperties['NCP:Version']}
+        value={props.dirtyNCPProperties['NCP:Version'] || props.ncpProperties['NCP:Version']}
         isDisabled={true}
       />
 
       <ConfigPropertyNumberInput
         name="NCP:InterfaceType"
         id="NCP:InterfaceType"
-        value={props.ncpProperties['NCP:InterfaceType']}
+        value={
+          props.dirtyNCPProperties['NCP:InterfaceType'] || props.ncpProperties['NCP:InterfaceType']
+        }
         isDisabled={true}
       />
       <ConfigPropertyTextInput
         name="Hardware Address"
         id="NCP:HardwareAddress"
-        value={props.ncpProperties['NCP:HardwareAddress']}
+        value={
+          props.dirtyNCPProperties['NCP:HardwareAddress'] ||
+          props.ncpProperties['NCP:HardwareAddress']
+        }
         isDisabled={true}
       />
       <ConfigPropertyNumberInput
         name="NCP:CCAThreshold"
         id="NCP:CCAThreshold"
-        value={props.ncpProperties['NCP:CCAThreshold']}
+        value={
+          props.dirtyNCPProperties['NCP:CCAThreshold'] || props.ncpProperties['NCP:CCAThreshold']
+        }
         isDisabled={stackUp}
       />
       <ConfigPropertyNumberInput
         name="NCP:TXPower"
         id="NCP:TXPower"
-        value={props.ncpProperties['NCP:TXPower']}
+        value={props.dirtyNCPProperties['NCP:TXPower'] || props.ncpProperties['NCP:TXPower']}
         isDisabled={stackUp}
       />
       <ConfigPropertyTextInput
         name="NCP:Region"
         id="NCP:Region"
-        value={props.ncpProperties['NCP:Region']}
+        value={props.dirtyNCPProperties['NCP:Region'] || props.ncpProperties['NCP:Region']}
         isDisabled={true}
       />
       <ConfigPropertyNumberInput
         name="NCP:ModeID"
         id="NCP:ModeID"
-        value={props.ncpProperties['NCP:ModeID']}
+        value={props.dirtyNCPProperties['NCP:ModeID'] || props.ncpProperties['NCP:ModeID']}
         isDisabled={true}
       />
       <ConfigPropertyTextInput
         name="unicastchlist"
         id="unicastchlist"
-        value={props.ncpProperties['unicastchlist']}
+        value={props.dirtyNCPProperties['unicastchlist'] || props.ncpProperties['unicastchlist']}
       />
       <ConfigPropertyTextInput
         name="broadcastchlist"
         id="broadcastchlist"
-        value={props.ncpProperties['broadcastchlist']}
+        value={
+          props.dirtyNCPProperties['broadcastchlist'] || props.ncpProperties['broadcastchlist']
+        }
       />
       <ConfigPropertyTextInput
         name="asyncchlist"
         id="asyncchlist"
-        value={props.ncpProperties['asyncchlist']}
+        value={props.dirtyNCPProperties['asyncchlist'] || props.ncpProperties['asyncchlist']}
       />
       <ConfigPropertyTextInput
         name="chspacing"
         id="chspacing"
-        value={props.ncpProperties['chspacing']}
+        value={props.dirtyNCPProperties['chspacing'] || props.ncpProperties['chspacing']}
         isDisabled={true}
       />
       <ConfigPropertyTextInput
         name="ch0centerfreq"
         id="ch0centerfreq"
-        value={props.ncpProperties['ch0centerfreq']}
+        value={props.dirtyNCPProperties['ch0centerfreq'] || props.ncpProperties['ch0centerfreq']}
         isDisabled={true}
       />
       <ConfigPropertyTextInput
         name="Network:Panid"
         id="Network:Panid"
-        value={props.ncpProperties['Network:Panid']}
+        value={props.dirtyNCPProperties['Network:Panid'] || props.ncpProperties['Network:Panid']}
         isDisabled={stackUp}
       />
       <ConfigPropertyNumberInput
         name="bcdwellinterval"
         id="bcdwellinterval"
-        value={props.ncpProperties['bcdwellinterval']}
+        value={
+          props.dirtyNCPProperties['bcdwellinterval'] || props.ncpProperties['bcdwellinterval']
+        }
         isDisabled={stackUp}
       />
       <ConfigPropertyNumberInput
         name="ucdwellinterval"
         id="ucdwellinterval"
-        value={props.ncpProperties['ucdwellinterval']}
+        value={
+          props.dirtyNCPProperties['ucdwellinterval'] || props.ncpProperties['ucdwellinterval']
+        }
         isDisabled={stackUp}
       />
       <ConfigPropertyNumberInput
         name="bcinterval"
         id="bcinterval"
-        value={props.ncpProperties['bcinterval']}
+        value={props.dirtyNCPProperties['bcinterval'] || props.ncpProperties['bcinterval']}
         isDisabled={stackUp}
       />
       <ConfigPropertyNumberInput
         name="ucchfunction"
         id="ucchfunction"
-        value={props.ncpProperties['ucchfunction']}
+        value={props.dirtyNCPProperties['ucchfunction'] || props.ncpProperties['ucchfunction']}
         isDisabled={stackUp}
       />
       <ConfigPropertyNumberInput
         name="bcchfunction"
         id="bcchfunction"
-        value={props.ncpProperties['bcchfunction']}
+        value={props.dirtyNCPProperties['bcchfunction'] || props.ncpProperties['bcchfunction']}
         isDisabled={stackUp}
       />
       <MacFilterModeConfig value={props.ncpProperties['macfiltermode']} />
       <ConfigPropertyTextInput
         name="BR NodeType"
         id="Network:NodeType"
-        value={props.ncpProperties['Network:NodeType']}
+        value={
+          props.dirtyNCPProperties['Network:NodeType'] || props.ncpProperties['Network:NodeType']
+        }
         isDisabled={true}
       />
       <ConfigPropertyTextInput
         name="Network Name"
         id="Network:Name"
-        value={props.ncpProperties['Network:Name']}
+        value={props.dirtyNCPProperties['Network:Name'] || props.ncpProperties['Network:Name']}
       />
     </div>
   );
@@ -296,13 +312,33 @@ interface NCPStatusProps {
 }
 
 function NCPStatus(props: NCPStatusProps) {
+  const App = useContext(AppContext);
   const startStack = useCallback(async () => {
-    await APIService.setProp('Interface:Up', true);
-    await APIService.setProp('Stack:Up', true);
-  }, []);
+    try {
+      let {wasSuccess} = await APIService.setProp('Interface:Up', true);
+      console.log(wasSuccess);
+      await APIService.setProp('Stack:Up', true);
+    } catch (e) {
+      //network error
+      if (App === null) {
+        console.error('App is null');
+        return;
+      }
+      App.receivedNetworkError(e);
+    }
+  }, [App]);
   const sendReset = useCallback(async () => {
-    await APIService.getReset();
-  }, []);
+    try {
+      await APIService.getReset();
+    } catch (e) {
+      //network error
+      if (App === null) {
+        console.error('App is null');
+        return;
+      }
+      App.receivedNetworkError(e);
+    }
+  }, [App]);
 
   return (
     <div className="ncpStatusContainer">
@@ -403,6 +439,7 @@ function NetworkProperties(props: NetworkPropertiesProps) {
 
 interface ConfigTabProps {
   ncpProperties: NCPProperties;
+  dirtyNCPProperties: Partial<NCPProperties>;
   topology: Topology;
 }
 
@@ -422,7 +459,10 @@ export default function ConfigTab(props: ConfigTabProps) {
       <Pane>
         <div className="tile_container_full tile_container_common">
           <Tile title="Config Properties">
-            <ConfigProperties ncpProperties={props.ncpProperties} />
+            <ConfigProperties
+              ncpProperties={props.ncpProperties}
+              dirtyNCPProperties={props.dirtyNCPProperties}
+            />
           </Tile>
         </div>
       </Pane>

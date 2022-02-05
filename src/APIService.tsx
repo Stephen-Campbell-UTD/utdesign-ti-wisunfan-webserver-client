@@ -1,5 +1,11 @@
 import {NCPProperties} from './App';
-import {Pingburst, PingburstAbortStatus, PingburstCreateRequest, Topology} from './types';
+import {
+  Pingburst,
+  PingburstAbortStatus,
+  PingburstCreateRequest,
+  RequestStatus,
+  Topology,
+} from './types';
 
 export class APIService {
   static host: string = 'http://localhost:8000';
@@ -29,7 +35,7 @@ export class APIService {
     }
   }
 
-  static async getReset(): Promise<boolean> {
+  static async getReset(): Promise<RequestStatus> {
     const {wasSuccess} = await APIService.fetchJSON('/reset');
     return wasSuccess;
   }
@@ -43,7 +49,7 @@ export class APIService {
   static async setProp(
     property: keyof NCPProperties,
     value: NCPProperties[keyof NCPProperties]
-  ): Promise<boolean> {
+  ): Promise<RequestStatus> {
     const data = await APIService.fetchJSON(`/setProp?property=${property}&newValue=${value}`);
     return data;
   }

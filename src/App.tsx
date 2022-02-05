@@ -4,22 +4,19 @@ import {THEME, ColorScheme, ThemeContext} from './ColorScheme';
 import produce from 'immer';
 import ThemeToggle from './components/ThemeToggle';
 import SettingsButton from './components/SettingsButton';
-import {
-  compareObjects,
-  debounce,
-  KeysMatching,
-  mergeObjectsInPlace,
-  nicknameGenerator,
-} from './utils';
+import {KeysMatching, nicknameGenerator} from './utils';
 import {PingJobsButton} from './components/PingJobsButton';
 import TabSelector from './components/TabSelector';
 import MonitorTab from './components/MonitorTab';
 import ConfigTab from './components/ConfigTab';
 import {AppContext} from './Contexts';
-import {IPAddressInfo, Pingburst, Topology} from './types';
+import {BorderRouterIPEntry, IPAddressInfo, Pingburst, Topology} from './types';
 import {APIService} from './APIService';
 import ConnectBorderRouterMessage from './components/ConnectBorderRouterMessage';
 import InvalidHostMessage from './components/InvalidHostMessage';
+import {io} from 'socket.io-client';
+import {applyPatch, deepClone} from 'fast-json-patch';
+import {WritableDraft} from 'immer/dist/types/types-external';
 
 export function getIPAddressInfoByIP(ipAddressInfoArray: IPAddressInfo[], ip: string) {
   for (const ipAddressInfo of ipAddressInfoArray) {
@@ -57,39 +54,41 @@ export interface NCPProperties {
   'Stack:Up': boolean | null;
   'Network:NodeType': string | null;
   'Network:Name': string | null;
-  'IPv6:AllAddresses': string | null;
+  'IPv6:AllAddresses': BorderRouterIPEntry[] | null;
 }
 export type NCPStringProperties = KeysMatching<NCPProperties, string | null>;
 export type NCPNumberProperties = KeysMatching<NCPProperties, number | null>;
 
-const DEFAULT_NCP_PROPERTY_VALUES = {
-  'NCP:State': null,
-  'NCP:ProtocolVersion': null,
-  'NCP:Version': null,
-  'NCP:InterfaceType': null,
-  'NCP:HardwareAddress': null,
-  'NCP:CCAThreshold': null,
-  'NCP:TXPower': null,
-  'NCP:Region': null,
-  'NCP:ModeID': null,
-  unicastchlist: null,
-  broadcastchlist: null,
-  asyncchlist: null,
-  chspacing: null,
-  ch0centerfreq: null,
-  'Network:Panid': null,
-  bcdwellinterval: null,
-  ucdwellinterval: null,
-  bcinterval: null,
-  ucchfunction: null,
-  bcchfunction: null,
-  macfilterlist: null,
-  macfiltermode: null,
-  'Interface:Up': null,
-  'Stack:Up': null,
-  'Network:NodeType': null,
-  'Network:Name': null,
-  'IPv6:AllAddresses': null,
+const DEFAULT_NCP_PROPERTY_VALUES = () => {
+  return {
+    'NCP:State': null,
+    'NCP:ProtocolVersion': null,
+    'NCP:Version': null,
+    'NCP:InterfaceType': null,
+    'NCP:HardwareAddress': null,
+    'NCP:CCAThreshold': null,
+    'NCP:TXPower': null,
+    'NCP:Region': null,
+    'NCP:ModeID': null,
+    unicastchlist: null,
+    broadcastchlist: null,
+    asyncchlist: null,
+    chspacing: null,
+    ch0centerfreq: null,
+    'Network:Panid': null,
+    bcdwellinterval: null,
+    ucdwellinterval: null,
+    bcinterval: null,
+    ucchfunction: null,
+    bcchfunction: null,
+    macfilterlist: null,
+    macfiltermode: null,
+    'Interface:Up': null,
+    'Stack:Up': null,
+    'Network:NodeType': null,
+    'Network:Name': null,
+    'IPv6:AllAddresses': [],
+  };
 };
 
 enum TAB_VIEW {
@@ -105,25 +104,32 @@ interface AppState {
   readonly pingbursts: Pingburst[];
   readonly connected: boolean;
   readonly ncpProperties: NCPProperties;
+  //ncp properties that are currently being edited/not in fetched state
+  readonly dirtyNCPProperties: Partial<NCPProperties>;
   readonly tabView: TAB_VIEW;
   readonly theme: THEME;
 }
+
+const DEFAULT_TOPOLOGY = () => {
+  return {
+    numConnected: 0,
+    connectedDevices: [],
+    routes: [],
+    graph: {nodes: [], edges: []},
+  };
+};
 interface AppProps {}
 
 export default class App extends React.Component<AppProps, AppState> {
   /** NCP Properties that are compared to when properties for setProps.  */
   cachedNCPProperties: NCPProperties | null = null;
   state = {
-    topology: {
-      numConnected: 0,
-      connectedDevices: [],
-      routes: [],
-      graph: {nodes: [], edges: []},
-    },
+    topology: DEFAULT_TOPOLOGY(),
     ipAddressInfoArray: [],
     pingbursts: [],
     connected: false,
-    ncpProperties: DEFAULT_NCP_PROPERTY_VALUES,
+    ncpProperties: DEFAULT_NCP_PROPERTY_VALUES(),
+    dirtyNCPProperties: {} as Partial<NCPProperties>,
     tabView: TAB_VIEW.INVALID_HOST,
     theme: THEME.TI,
   };
@@ -132,162 +138,148 @@ export default class App extends React.Component<AppProps, AppState> {
 
     let body = document.getElementsByTagName('body')[0];
     body.style.backgroundColor = ColorScheme.getColor('bg0', this.state.theme);
-
-    //update pingbursts func
-    this.updateAppState().catch(e => console.error(e));
-    setInterval(this.updateAppState, 1000);
   }
-
-  updateAppState = async () => {
-    //updates state.connected
-    await this.updateConnected();
-    if (this.state.connected) {
-      this.updatePingbursts();
-      this.updateTopologyAndIPAddressInfoArray();
-    }
-  };
-
-  _updateTopologyAndIPAddressInfoArray = async () => {
-    let newTopology: Topology;
-    try {
-      newTopology = await APIService.getTopology();
-    } catch (e) {
-      console.error(e);
-      return;
-    }
-    //there is only a real change if the graphs are different
-    const areEqual = compareObjects(newTopology.graph, this.state.topology.graph);
-    if (areEqual) {
-      return;
-    }
-    this.setState(state => {
-      return produce(state, draft => {
-        //find diff of ip_addresses
-        function difference<SetMemberType>(
-          iterA: Iterable<SetMemberType>,
-          iterB: Iterable<SetMemberType>
-        ): Set<SetMemberType> {
-          let _difference = new Set(iterA);
-          for (let elem of Array.from(iterB)) {
-            _difference.delete(elem);
-          }
-          return _difference;
-        }
-        const ipsToRemove = difference(
-          this.state.topology.connectedDevices,
-          newTopology.connectedDevices
-        );
-        const ipsToAdd = difference(
-          newTopology.connectedDevices,
-          this.state.topology.connectedDevices
-        );
-        let ipsToAddArray = Array.from(ipsToAdd);
-        //Add new entries to ipAddressInfoArray
-
-        const ipAddressInfoToAdd = ipsToAddArray.map((ipAddress: string) => {
-          const nickname = nicknameGenerator(ipAddress);
-          return {
-            isSelected: false,
-            ipAddress,
-            nickname,
-            isConnected: true,
-          };
-        });
-
-        draft.ipAddressInfoArray.push(...ipAddressInfoToAdd);
-        draft.ipAddressInfoArray = draft.ipAddressInfoArray.filter(
-          ipInfo => !ipsToRemove.has(ipInfo.ipAddress)
-        );
-
-        draft.topology.connectedDevices = newTopology.connectedDevices;
-        draft.topology.numConnected = newTopology.numConnected;
-        draft.topology.graph = newTopology.graph;
-      });
-    });
-  };
-
-  updateTopologyAndIPAddressInfoArray = debounce(this._updateTopologyAndIPAddressInfoArray, 10000);
 
   receivedNetworkError(e: unknown) {
-    this.setState({connected: false, tabView: TAB_VIEW.INVALID_HOST});
+    this.setState({
+      topology: DEFAULT_TOPOLOGY(),
+      ipAddressInfoArray: [],
+      pingbursts: [],
+      connected: false,
+      ncpProperties: DEFAULT_NCP_PROPERTY_VALUES(),
+      dirtyNCPProperties: {} as Partial<NCPProperties>,
+      tabView: TAB_VIEW.INVALID_HOST,
+    });
   }
 
-  _updatePingbursts = async () => {
-    let newPingbursts: Pingburst[];
-    try {
-      newPingbursts = await APIService.getPingbursts();
-    } catch (e) {
-      this.receivedNetworkError(e);
-      return;
-    }
-    const areEqual = compareObjects(newPingbursts, this.state.pingbursts);
-    if (areEqual) {
-      return;
-    }
-    this.setState(prevState => {
-      const newState = produce(prevState, draft => {
-        mergeObjectsInPlace(draft.pingbursts, newPingbursts);
-      });
-      return newState;
+  componentDidMount() {
+    // socket.on('connect', () => {
+    // });
+    const socket = io('http://localhost:8000');
+    socket.on('connect_error', () => {
+      console.error('Socket Connect Error');
     });
-  };
-  updatePingbursts = debounce(this._updatePingbursts, 500);
+    socket.on('disconnect', reason => {
+      this.receivedNetworkError('Socket Disconnected');
+    });
 
-  updateNCPProperties = async () => {
-    let newNCPProperties: NCPProperties;
-    try {
-      newNCPProperties = await APIService.getProps();
-      this.cachedNCPProperties = newNCPProperties;
-    } catch (e) {
-      this.receivedNetworkError(e);
-      return;
-    }
-    this.setState({ncpProperties: newNCPProperties});
-  };
+    const deriveState = (prevState: AppState, draftState: WritableDraft<AppState>) => {
+      draftState.tabView = this.deriveTabView(prevState, draftState);
+      this.deriveModifiedIPAddressInfoArray(
+        prevState.topology.connectedDevices,
+        draftState.topology.connectedDevices,
+        draftState
+      );
+    };
+
+    socket.on('initialState', (data: Partial<AppState>) => {
+      console.log('new data', data);
+      this.setState(prevState => {
+        return produce(prevState, draftState => {
+          Object.assign(draftState, data);
+          deriveState(prevState, draftState);
+        });
+      });
+    });
+
+    socket.on('stateChange', patchArray => {
+      console.log('state patch:', deepClone(patchArray));
+      this.setState(prevState => {
+        return produce(prevState, draftState => {
+          applyPatch(draftState, patchArray);
+          deriveState(prevState, draftState);
+        });
+      });
+    });
+  }
 
   setNCPProperties = async () => {
-    try {
-      if (this.cachedNCPProperties === null) {
+    let property: keyof NCPProperties;
+    const keysToDelete: (keyof NCPProperties)[] = [];
+    for (property in this.state.dirtyNCPProperties) {
+      let value = this.state.ncpProperties[property];
+      try {
+        const {wasSuccess} = await APIService.setProp(property, value);
+        if (wasSuccess) {
+          keysToDelete.push(property);
+        }
+      } catch (e) {
+        this.receivedNetworkError(e);
         return;
       }
-      let property: keyof NCPProperties;
-      for (property in this.state.ncpProperties) {
-        let value = this.state.ncpProperties[property];
-        if (this.cachedNCPProperties[property] !== value) {
-          APIService.setProp(property, value);
+    }
+    this.setState(prevState => {
+      return produce(prevState, draftState => {
+        for (const key of keysToDelete) {
+          delete draftState.ncpProperties[key];
         }
+      });
+    });
+  };
+
+  deriveTabView = (prevState: Partial<AppState>, currentState: Partial<AppState>) => {
+    let {connected: currentlyConnected} = currentState;
+    let {connected: previouslyConnected, tabView: previousTabView} = prevState;
+    if (previousTabView === undefined) {
+      console.error('tab view not set');
+      return TAB_VIEW.INVALID_HOST;
+    }
+    if (!currentlyConnected && previouslyConnected) {
+      //br became disconnected
+      return TAB_VIEW.CONNECT;
+    } else if (currentlyConnected && !previouslyConnected) {
+      //br became connected
+      if (previousTabView === TAB_VIEW.CONNECT || previousTabView === TAB_VIEW.INVALID_HOST) {
+        return TAB_VIEW.CONFIG;
+      } else {
+        return previousTabView;
       }
-    } catch (e) {
-      this.receivedNetworkError(e);
-      return;
+    } else if (!currentlyConnected && previousTabView === TAB_VIEW.INVALID_HOST) {
+      //we can reach the server but we aren't connected
+      return TAB_VIEW.CONNECT;
+    } else {
+      if (previousTabView === undefined) {
+        console.error('tab view not set');
+        return TAB_VIEW.INVALID_HOST;
+      }
+      return previousTabView;
     }
   };
 
-  updateConnected = async () => {
-    try {
-      let connected = await APIService.getConnected();
-      if (!connected && this.state.connected) {
-        //br became disconnected
-        this.setState({connected, tabView: TAB_VIEW.CONNECT});
-      } else if (connected && !this.state.connected) {
-        //br became connected
-        if (
-          this.state.tabView === TAB_VIEW.CONNECT ||
-          this.state.tabView === TAB_VIEW.INVALID_HOST
-        ) {
-          this.setState({connected, tabView: TAB_VIEW.CONFIG});
-        } else {
-          this.setState({connected});
-        }
-        this.updateNCPProperties();
-      } else if (!connected && this.state.tabView === TAB_VIEW.INVALID_HOST) {
-        //we can reach the server but we aren't connected
-        this.setState({connected, tabView: TAB_VIEW.CONNECT});
+  deriveModifiedIPAddressInfoArray = (
+    previouslyConnectedDevices: string[],
+    currentlyConnectedDevices: string[],
+    draftState: WritableDraft<AppState>
+  ) => {
+    function difference<SetMemberType>(
+      iterA: Iterable<SetMemberType>,
+      iterB: Iterable<SetMemberType>
+    ): Set<SetMemberType> {
+      let _difference = new Set(iterA);
+      for (let elem of Array.from(iterB)) {
+        _difference.delete(elem);
       }
-    } catch (e) {
-      this.receivedNetworkError(e);
-      return;
+      return _difference;
     }
+    const ipsToRemove = difference(previouslyConnectedDevices, currentlyConnectedDevices);
+    const ipsToAdd = difference(currentlyConnectedDevices, previouslyConnectedDevices);
+    let ipsToAddArray = Array.from(ipsToAdd);
+    //Add new entries to ipAddressInfoArray
+
+    const ipAddressInfoToAdd = ipsToAddArray.map((ipAddress: string) => {
+      const nickname = nicknameGenerator(ipAddress);
+      return {
+        isSelected: false,
+        ipAddress,
+        nickname,
+        isConnected: true,
+      };
+    });
+
+    draftState.ipAddressInfoArray.push(...ipAddressInfoToAdd);
+    draftState.ipAddressInfoArray = draftState.ipAddressInfoArray.filter(
+      ipInfo => !ipsToRemove.has(ipInfo.ipAddress)
+    );
   };
 
   ipSelectionHandler = (ip: string, isSelected: boolean) => {
@@ -325,6 +317,9 @@ export default class App extends React.Component<AppProps, AppState> {
   setTab(tab: TAB_VIEW) {
     this.setState({tabView: tab});
   }
+  clearDirtyNCPProperties = () => {
+    this.setState({dirtyNCPProperties: {}});
+  };
 
   render() {
     let body = document.getElementsByTagName('body')[0];
@@ -340,7 +335,11 @@ export default class App extends React.Component<AppProps, AppState> {
     switch (this.state.tabView) {
       case TAB_VIEW.CONFIG:
         currentTab = (
-          <ConfigTab topology={this.state.topology} ncpProperties={this.state.ncpProperties} />
+          <ConfigTab
+            topology={this.state.topology}
+            ncpProperties={this.state.ncpProperties}
+            dirtyNCPProperties={this.state.dirtyNCPProperties}
+          />
         );
         break;
       case TAB_VIEW.CONNECT:
