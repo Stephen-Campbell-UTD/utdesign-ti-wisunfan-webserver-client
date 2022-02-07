@@ -99,6 +99,16 @@ export default class Topology extends React.Component<TopologyProps> {
       }
       this.cy.layout(this.layout).run();
     });
+    document.addEventListener('visibilitychange', this.forceRender);
+  }
+  forceRender = () => {
+    if (this.cy === null) {
+      return;
+    }
+    this.cy.forceRender();
+  };
+  componentWillUnmount() {
+    document.removeEventListener('visibilitychange', this.forceRender);
   }
 
   componentDidUpdate() {

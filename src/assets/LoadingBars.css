@@ -1,7 +1,7 @@
 .barContainer rect {
   --duration: 1.6s;
   --stagger-duration: calc(var(--duration) / 9);
-  animation-name: pulse;
+  animation-name: LoadingBarPulse;
   transform-origin: center;
   animation-timing-function: ease-in-out;
   animation-duration: var(--duration);
@@ -18,7 +18,7 @@
   animation-delay: calc(var(--stagger-duration));
 }
 
-@keyframes pulse {
+/* @keyframes pulse {
   0% {
     transform: scale(1, 100%);
   }
@@ -27,5 +27,17 @@
   }
   100% {
     transform: scale(1, 100%);
+  } */
+/* } */
+
+@keyframes LoadingBarPulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
   }
 }

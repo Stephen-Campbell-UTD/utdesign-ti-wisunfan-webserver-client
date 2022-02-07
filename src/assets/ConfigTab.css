@@ -27,9 +27,10 @@
 
 .ncpStatusContainer {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+  column-gap: 20px;
   row-gap: 25px;
   width: 80%;
   margin-top: 30px;

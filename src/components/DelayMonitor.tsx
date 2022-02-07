@@ -202,7 +202,7 @@ class NetworkDelayChart extends React.Component<NetworkDelayChartProps, NetworkD
       const side = 14;
       const spacing = side * 1.5;
       return (
-        <g transform={`translate(5,${spacing * index})`}>
+        <g key={path.dString} transform={`translate(5,${spacing * index})`}>
           <rect fill={path.color} width={`${side}`} height={`${side}`}></rect>
           <text fill={textColor} style={{fontSize: 12}} textAnchor="start" dx="20" dy="12">
             {path.label}

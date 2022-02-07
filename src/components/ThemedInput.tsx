@@ -63,6 +63,7 @@ export interface ThemedInputProps {
   isDisabled?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  inputStyle?: React.CSSProperties;
   //if value is null the input will go into a "loading" state
   value: string | null;
   onChange: (newValue: string) => void;
@@ -72,11 +73,12 @@ export function ThemedInput({
   isDisabled = false,
   className = '',
   style = {},
+  inputStyle = {},
   value = null,
   onChange = () => {},
 }: ThemedInputProps) {
   const theme = useContext(ThemeContext);
-  let {inputStyle} = themedInputThemeImplementations.get(theme);
+  let {inputStyle: themeInputStyle} = themedInputThemeImplementations.get(theme);
   const onChangeHandler = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
     [onChange]
@@ -86,7 +88,7 @@ export function ThemedInput({
     <div style={{position: 'relative', ...style}} className={className}>
       {isLoading && <LoadingBars style={loadingBarsStyle} />}
       <input
-        css={inputStyle}
+        css={{height: 26, ...inputStyle, ...(themeInputStyle as any)}}
         disabled={isDisabled || isLoading}
         className={'themed_input '}
         type="text"

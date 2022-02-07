@@ -1,4 +1,4 @@
-import React, {ReactChild, useEffect, useRef, useState} from 'react';
+import React, {ReactChild, ReactNode, useEffect, useRef, useState} from 'react';
 import reactDom from 'react-dom';
 import '../assets/Tooltip.css';
 
@@ -9,7 +9,8 @@ interface Location {
 
 interface TooltipPortalProps {
   loc: Location;
-  content?: ReactChild;
+  content?: ReactNode;
+  style?: React.CSSProperties;
 }
 
 function TooltipPortal(props: TooltipPortalProps) {
@@ -23,6 +24,7 @@ function TooltipPortal(props: TooltipPortalProps) {
     position: 'absolute' as 'absolute',
     top: '0',
     left: '0',
+    ...props.style,
   };
 
   return reactDom.createPortal(
@@ -34,9 +36,10 @@ function TooltipPortal(props: TooltipPortalProps) {
 }
 
 interface TooltipProps {
-  content?: ReactChild;
-  children?: ReactChild;
+  content?: ReactNode;
+  children?: ReactNode;
   style?: React.CSSProperties;
+  containerStyle?: React.CSSProperties;
 }
 
 export default function Tooltip(props: TooltipProps) {
@@ -64,13 +67,19 @@ export default function Tooltip(props: TooltipProps) {
   return (
     <div
       className="tooltip-container"
-      style={{width: '100%', display: 'relative'}}
+      style={{width: '100%', display: 'relative', ...props.containerStyle}}
       onMouseEnter={() => setShown(true)}
       onMouseLeave={() => setShown(false)}
     >
       {props.children}
       <div ref={localRef} className="tooltip-bottom-center"></div>
-      {shown && <TooltipPortal loc={{top, left}} content={props.content}></TooltipPortal>}
+      {shown && (
+        <TooltipPortal
+          loc={{top, left}}
+          style={props.style}
+          content={props.content}
+        ></TooltipPortal>
+      )}
     </div>
   );
 }

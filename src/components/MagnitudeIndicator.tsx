@@ -64,8 +64,9 @@ export default function MagnitudeIndicator(props: MagnitudeIndicatorProps) {
   };
 
   const width = value * 100;
+  // style={{width: '80%', left: '10%', right: 0}}
   return (
-    <Tooltip style={{width: '80%', left: '10%', right: 0}} content={props.tooltip || 'N/A'}>
+    <Tooltip content={props.tooltip || 'N/A'}>
       <div style={backgroundStyle}>
         <motion.div
           animate={{width}}

@@ -13,7 +13,8 @@ import {ThemedSelect} from './ThemedSelect';
 import {NCPNumberProperties, NCPProperties, NCPStringProperties} from '../App';
 import {Topology} from '../types';
 import {APIService} from '../APIService';
-import {NCPStateIndicator} from './NCPStateIndicator';
+import {deriveNCPIndicatorStatus, NCPStateIndicator} from './NCPStateIndicator';
+import Tooltip from './Tooltip';
 
 interface ConfigPropertyTextInputProps {
   /**Display Name of Property */
@@ -42,7 +43,8 @@ function ConfigPropertyTextInput(props: ConfigPropertyTextInputProps) {
     <div className="config_label">
       <ThemedLabel style={{fontSize: 14}}>{props.name}</ThemedLabel>
       <ThemedInput
-        style={{width: '45%', fontSize: 14}}
+        style={{width: '45%', fontSize: 14, height: 30}}
+        inputStyle={{height: 30}}
         isDisabled={props.isDisabled}
         value={props.value}
         onChange={changeHandler}
@@ -76,7 +78,8 @@ function ConfigPropertyNumberInput(props: ConfigPropertyNumberInputProps) {
     <div className="config_label">
       <ThemedLabel style={{fontSize: 14}}>{props.name}</ThemedLabel>
       <ThemedInput
-        style={{width: '45%', fontSize: 14}}
+        style={{width: '45%', fontSize: 14, height: 30}}
+        inputStyle={{height: 30}}
         isDisabled={props.isDisabled}
         value={typeof props.value === 'number' ? props.value.toString(10) : null}
         onChange={changeHandler}
@@ -342,27 +345,71 @@ function NCPStatus(props: NCPStatusProps) {
 
   return (
     <div className="ncpStatusContainer">
-      <div className="ncpStatusRow">
-        <ThemedLabel style={{fontSize: 24}}>
-          <NCPStateIndicator ncpState={props.ncpState} />
-        </ThemedLabel>
-      </div>
-      <div className="ncpStatusRow">
-        <ThemedLabel style={{fontSize: 24}}>Interface Up</ThemedLabel>
-        <StatusIndicator isGoodStatus={Boolean(props.interfaceUp)}></StatusIndicator>
-      </div>
-      <div className="ncpStatusRow">
-        <ThemedLabel style={{fontSize: 24}}>Stack Up</ThemedLabel>
-        <StatusIndicator isGoodStatus={Boolean(props.stackUp)}></StatusIndicator>
-      </div>
-      <div className="ncpStatusRow">
-        <ThemedButton onClick={startStack} themedButtonType={THEMED_BUTTON_TYPE.PRIMARY}>
+      {/* <ThemedLabel style={{fontSize: 24}}>NCP State</ThemedLabel> */}
+      {/* <div style={{width: '100%', display: 'flex', flexDirection: 'row', marginBottom: 20}}> */}
+      <div
+        style={{
+          width: '45%',
+          display: 'flex',
+          flexDirection: 'column',
+          rowGap: 20,
+          height: '100%',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Tooltip
+          content={props.ncpState}
+          style={{top: -18}}
+          containerStyle={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <NCPStateIndicator status={deriveNCPIndicatorStatus(props.ncpState)} />
+        </Tooltip>
+
+        <ThemedButton
+          style={{width: '100%'}}
+          onClick={startStack}
+          themedButtonType={THEMED_BUTTON_TYPE.PRIMARY}
+        >
           Start
         </ThemedButton>
-        <ThemedButton onClick={sendReset} themedButtonType={THEMED_BUTTON_TYPE.SECONDARY}>
-          Reset
-        </ThemedButton>
       </div>
+      <div
+        style={{
+          width: '45%',
+          display: 'flex',
+          flexDirection: 'column',
+          rowGap: 20,
+          height: '100%',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <div className="ncpStatusRow">
+          <ThemedLabel style={{fontSize: 20}}>Interface</ThemedLabel>
+          <StatusIndicator isGoodStatus={Boolean(props.interfaceUp)}></StatusIndicator>
+        </div>
+        <div className="ncpStatusRow">
+          <ThemedLabel style={{fontSize: 20}}>Stack</ThemedLabel>
+          <StatusIndicator isGoodStatus={Boolean(props.stackUp)}></StatusIndicator>
+        </div>
+
+        <div className="ncpStatusRow">
+          <ThemedButton
+            style={{width: '100%'}}
+            onClick={sendReset}
+            themedButtonType={THEMED_BUTTON_TYPE.SECONDARY}
+          >
+            Reset
+          </ThemedButton>
+        </div>
+      </div>
+      {/* </div> */}
     </div>
   );
 }

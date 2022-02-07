@@ -2,6 +2,7 @@ import {useContext} from 'react';
 import Select, {StylesConfig} from 'react-select';
 import {Color, ColorScheme, THEME, ThemeContext} from '../ColorScheme';
 import {ComponentThemeImplementations} from '../utils';
+import {LoadingBars} from './LoadingBars';
 
 interface ThemedSelectTheme {
   textColor: Color;
@@ -50,6 +51,20 @@ interface ThemedSelectProps {
   onChange?: (newValue: any) => void;
 }
 
+const loadingBarsStyle = {
+  position: 'absolute' as 'absolute',
+  height: '80%',
+  marginLeft: 'auto',
+  marginRight: 'auto',
+  marginTop: 'auto',
+  marginBottom: 'auto',
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+  // zIndex: 10,
+};
+
 export function ThemedSelect(props: ThemedSelectProps) {
   const theme = useContext(ThemeContext);
   const width = props.width || '100%';
@@ -57,7 +72,7 @@ export function ThemedSelect(props: ThemedSelectProps) {
     themedSelectThemeImplementations.get(theme);
 
   const customStyles: StylesConfig = {
-    container: provided => ({...provided, width}),
+    container: provided => ({...provided, width: '100%'}),
     menu: (provided, state) => ({
       ...provided,
       backgroundColor,
@@ -74,6 +89,7 @@ export function ThemedSelect(props: ThemedSelectProps) {
         fontSize: props.fontSize,
         alignItems: 'center',
         borderTop: '1px solid transparent',
+        height: 30,
         '&:hover': {
           // borderTop: `1px solid ${accentColor}`,
         },
@@ -120,15 +136,19 @@ export function ThemedSelect(props: ThemedSelectProps) {
       return style;
     },
   };
+  const isLoading = props.value === null;
   return (
-    <Select
-      styles={customStyles}
-      options={props.options}
-      value={props.value}
-      isSearchable={false}
-      onChange={props.onChange}
-      defaultInputValue={props.defaultInputValue}
-      defaultValue={props.defaultValue}
-    ></Select>
+    <div style={{position: 'relative', width}}>
+      {isLoading && <LoadingBars style={loadingBarsStyle} />}
+      <Select
+        styles={customStyles}
+        options={props.options}
+        value={props.value}
+        isSearchable={false}
+        onChange={props.onChange}
+        defaultInputValue={props.defaultInputValue}
+        defaultValue={props.defaultValue}
+      />
+    </div>
   );
 }
